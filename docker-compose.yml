@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hobbytalk_backend
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - APP_ENV=local
+      - DB_HOST=db
+      - DB_DATABASE=hobbytalk
+      - DB_USERNAME=hobbyuser
+      - DB_PASSWORD=hobbypass
+    networks:
+      - hobbytalk_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: hobbytalk_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - hobbytalk_net
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    container_name: hobbytalk_nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - hobbytalk_net
+
+  db:
+    image: mysql:8.3
+    container_name: hobbytalk_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: hobbytalk
+      MYSQL_USER: hobbyuser
+      MYSQL_PASSWORD: hobbypass
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - hobbytalk_net
+
+
+  adminer:
+    image: adminer
+    container_name: hobbytalk_adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    networks:
+      - hobbytalk_net
+
+networks:
+  hobbytalk_net:
+
+volumes:
+  db_data:
