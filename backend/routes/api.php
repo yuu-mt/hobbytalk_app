@@ -6,21 +6,14 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Auth\LoginController;
 
 // 新規登録
 Route::post('/register', [RegisterController::class, 'register']);
 
-Route::post('/login', function (Request $request) {
-    $credentials = $request->only('email', 'password');
+Route::post('/login', [LoginController::class, 'login']);
 
-    if (!Auth::attempt($credentials)) {
-        return response()->json(['message' => 'Unauthorized'], 401);
-    }
-
-    $request->session()->regenerate();
-
-    return response()->json(['message' => 'Login success']);
-});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -32,4 +25,11 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
 
     return response()->json(['message' => 'Logged out']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/posts', [PostController::class, 'index']);
+    Route::post('/posts', [PostController::class, 'store']);
+    Route::get('/posts/{post}', [PostController::class, 'show']);
+    Route::delete('/posts/{post}', [PostController::class, 'destroy']);
 });
